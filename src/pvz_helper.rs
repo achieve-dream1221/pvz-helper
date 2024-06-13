@@ -102,7 +102,7 @@ impl PVZHelper {
             }).unwrap();
         self.join_handle.lock().unwrap().replace(h);
     }
-    
+
     fn read_memory(handle: HANDLE, addr: Address) -> Result<u32> {
         let buf = 0u32;
         let new_addr = 0u32;
@@ -122,7 +122,7 @@ impl PVZHelper {
 
     fn get_handle(title: &str) -> Result<HANDLE> {
         let hwnd = unsafe { FindWindowW(None, PCWSTR::from_raw(HSTRING::from(title).as_ptr())) };
-        if hwnd.0 == 0 { bail!("{} not found", title) }
+        if hwnd.0 == 0 { bail!("{} 未找到, 请先进入游戏!", title) }
         let mut pid = 0;
         unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)); }
         trace!("pid: {}", pid);
