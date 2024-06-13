@@ -1,4 +1,5 @@
 use std::sync::atomic::Ordering;
+
 use tracing_subscriber::fmt::time::LocalTime;
 
 mod address;
