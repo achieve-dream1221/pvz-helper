@@ -1,7 +1,6 @@
-use iced::{Alignment, Element, Sandbox, Settings, window, Size};
-#[allow(unused_imports)]
-use iced::widget::{column, button, text};
-use iced::window::{Position};
+use iced::{Alignment, Element, Sandbox, Settings, Size, window};
+use iced::widget::column;
+use iced::window::Position;
 
 pub fn main() -> iced::Result {
     Counter::run(Settings {

@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+
 use std::ffi::c_void;
 
 pub type Addr = *const c_void;
