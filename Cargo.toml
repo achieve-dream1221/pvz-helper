@@ -12,5 +12,5 @@ windows = { version = "*", features = [
     "Win32_System_Threading"] }
 
 tracing = "*"
-tracing-subscriber = { version = "*", features = ["local-time"] }
+tracing-subscriber = { version = "*", features = ["local-time", "env-filter"] }
 anyhow = "*"
