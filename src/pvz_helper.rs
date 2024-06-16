@@ -4,15 +4,15 @@ use std::thread;
 use std::thread::JoinHandle;
 
 use anyhow::{bail, Result};
-use tracing::{error, info, instrument, trace, warn};
+use tracing::{debug, error, info, instrument, warn};
 use windows::core::{HSTRING, PCWSTR};
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory};
 use windows::Win32::System::Threading::{OpenProcess, PROCESS_ALL_ACCESS};
 use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, GetWindowThreadProcessId};
+
 use crate::address;
 use crate::address::Address;
-
 
 #[derive(Debug)]
 pub struct PVZHelper {
@@ -25,7 +25,7 @@ impl Drop for PVZHelper {
     #[instrument(skip(self))]
     fn drop(&mut self) {
         unsafe {
-            CloseHandle(self.handle).is_ok().then(|| trace!("CloseHandle: {:?}", self.handle));
+            CloseHandle(self.handle).is_ok().then(|| debug!("CloseHandle: {:?}", self.handle));
         }
     }
 }
@@ -44,32 +44,28 @@ impl PVZHelper {
         })
     }
 
-    #[instrument(skip(self), ret, name = "修改阳光")]
+    #[instrument(skip(self), name = "修改阳光", ret)]
     pub fn modify_sun(&self, value: u32) -> bool {
         Self::write_memory(self.handle, address::SUN, value).is_ok()
     }
 
-    #[instrument(skip(self), name = "修改银币")]
+    #[instrument(skip(self), name = "修改银币", ret)]
     pub fn modify_sliver_coin(&self, value: u32) -> bool {
-        let ret = Self::write_memory(self.handle, address::SLIVER_COIN, value).is_ok();
-        if ret {
-            info!("银币修改成功");
-        } else {
-            warn!("银币修改失败");
-        }
-        ret
+        Self::write_memory(self.handle, address::SLIVER_COIN, value).is_ok()
     }
-    #[instrument(skip(self), name = "修改冷却时间")]
-    pub fn modify_cd(&mut self, no_cd: bool) {
+
+    #[instrument(skip(self), name = "修改冷却时间", ret)]
+    pub fn modify_cd(&mut self, no_cd: bool) -> bool {
         if !no_cd {
             self.running.store(false, Ordering::Relaxed); // 更改线程运行状态
             if let Some(h) = self.join_handle.lock().unwrap().take() {
                 h.join().unwrap(); // 等待关闭线程
             }
+            return true;
         }
         if self.join_handle.lock().unwrap().is_some() { // 确保只有一个线程运行该操作
             info!("modify_cd thread is already running...");
-            return;
+            return false;
         }
         self.running.store(true, Ordering::Relaxed); // 更改线程运行状态
         let running = self.running.clone();
@@ -81,13 +77,13 @@ impl PVZHelper {
                     if let Ok(final_addr) = Self::read_memory(handle, address::CD) {
                         unsafe {
                             if let Err(e) = ReadProcessMemory(handle, final_addr as _, &final_addr as *const u32 as _, 4, None) {
-                                error!("ReadProcessMemory failed: {:?}",e );
+                                error!("无cd模式开启失败,请检查是否进入游戏关卡, ReadProcessMemory failed: {:?}",e );
                                 running.store(false, Ordering::Relaxed);
                                 break;
                             }
                             for i in 0..14 {
                                 if let Err(e) = WriteProcessMemory(handle, (final_addr + 0x70 + (0x50) * i) as _, &no_cd as *const bool as _, 4, None) {
-                                    error!("WriteProcessMemory failed: {:?}",e );
+                                    error!("无cd模式开启失败,请检查是否进入游戏关卡, WriteProcessMemory failed: {:?}",e );
                                     running.store(false, Ordering::Relaxed);
                                     break;
                                 }
@@ -101,6 +97,7 @@ impl PVZHelper {
                 info!("modify_cd stop...");
             }).unwrap();
         self.join_handle.lock().unwrap().replace(h);
+        true
     }
 
     fn read_memory(handle: HANDLE, addr: Address) -> Result<u32> {
@@ -125,7 +122,7 @@ impl PVZHelper {
         if hwnd.0 == 0 { bail!("{} 未找到, 请先进入游戏!", title) }
         let mut pid = 0;
         unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)); }
-        trace!("pid: {}", pid);
+        debug!("pid: {}", pid);
         let handle = unsafe { OpenProcess(PROCESS_ALL_ACCESS, false, pid)? };
         if handle.is_invalid() { bail!("OpenProcess failed") }
         Ok(handle)
