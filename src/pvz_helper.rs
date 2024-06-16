@@ -10,9 +10,9 @@ use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory};
 use windows::Win32::System::Threading::{OpenProcess, PROCESS_ALL_ACCESS};
 use windows::Win32::UI::WindowsAndMessaging::{FindWindowW, GetWindowThreadProcessId};
-
 use crate::address;
 use crate::address::Address;
+
 
 #[derive(Debug)]
 pub struct PVZHelper {
@@ -82,13 +82,13 @@ impl PVZHelper {
                         unsafe {
                             if let Err(e) = ReadProcessMemory(handle, final_addr as _, &final_addr as *const u32 as _, 4, None) {
                                 error!("ReadProcessMemory failed: {:?}",e );
-                                running.store(false,Ordering::Relaxed);
+                                running.store(false, Ordering::Relaxed);
                                 break;
                             }
                             for i in 0..14 {
                                 if let Err(e) = WriteProcessMemory(handle, (final_addr + 0x70 + (0x50) * i) as _, &no_cd as *const bool as _, 4, None) {
                                     error!("WriteProcessMemory failed: {:?}",e );
-                                    running.store(false,Ordering::Relaxed);
+                                    running.store(false, Ordering::Relaxed);
                                     break;
                                 }
                             }
@@ -102,7 +102,7 @@ impl PVZHelper {
             }).unwrap();
         self.join_handle.lock().unwrap().replace(h);
     }
-    
+
     fn read_memory(handle: HANDLE, addr: Address) -> Result<u32> {
         let buf = 0u32;
         let new_addr = 0u32;

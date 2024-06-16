@@ -12,5 +12,22 @@ windows = { version = "*", features = [
     "Win32_System_Threading"] }
 
 tracing = "*"
-tracing-subscriber = { version = "*", features = ["local-time"] }
+tracing-subscriber = { version = "*", features = ["local-time", "env-filter"] }
 anyhow = "*"
+#ui
+iced = { version = "*", features = ["advanced"] }
+
+[[bin]]
+name = "iced_ui"
+path = "src/iced_ui.rs"
+
+[[bin]]
+name = "pvz_helper_ui"
+path = "src/pvz_helper_ui.rs"
+
+[profile.release]
+lto = "thin"
+opt-level = 'z'
+codegen-units = 1
+strip = "none"
+panic = "abort"
