@@ -7,7 +7,7 @@ mod pvz_helper;
 
 fn main() {
     tracing_subscriber::fmt().with_thread_names(true)
-        .with_max_level(tracing::Level::TRACE).with_timer(LocalTime::rfc_3339()).init();
+        .with_env_filter("pvz_helper=trace").with_timer(LocalTime::rfc_3339()).init();
     let title = env!("PROGRAM_TITLE");
     let mut helper = pvz_helper::PVZHelper::new(title);
     helper.modify_sun(9999);
