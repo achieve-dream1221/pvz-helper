@@ -3,6 +3,10 @@ name = "pvz-helper"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["qt"]
+qt = []
+
 [dependencies]
 windows = { version = "*", features = [
     "Win32_Foundation",
@@ -16,6 +20,19 @@ tracing-subscriber = { version = "*", features = ["local-time", "env-filter"] }
 anyhow = "*"
 #ui
 iced = { version = "*", features = ["advanced"] }
+# qt
+cxx = "*"
+cxx-qt = "*"
+cxx-qt-lib = "*"
+
+[build-dependencies]
+cxx-qt-build = { version = "*", features = ["link_qt_object_files"] }
+cxx-qt-lib-headers = "*"
+
+[[bin]]
+name = "qt_ui"
+path = "src/qt_ui.rs"
+
 
 [[bin]]
 name = "iced_ui"
